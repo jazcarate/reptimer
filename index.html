@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Rep Timer</title>
+</head>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: black;
+        color: white;
+        text-align: center;
+        width: 100%;
+        font-size: 70px;
+    }
+</style>
+
+<body>
+    <h1 id="timer">00:00</h1>
+    <h2 id="currentStep">Let's start!</h2>
+    <h3 id="nextStep">--</h3>
+    <button onclick="javascript: start()" autofocus>Start</button>
+</body>
+
+<script>
+    /**
+     * @typedef Step
+     * @type {object}
+     * @property {string} text - to display.
+     * @property {number} time - milliseconds.
+     */
+
+
+    /**
+     * @returns {Step}
+     */
+    function pause() {
+        return { time: 20000, text: 'pause' }
+    }
+
+    /**
+     * @param {number} times
+     * @param {...Step} toRepeat
+     * @returns {Step[]}
+    */
+    function repeat(times, ...toRepeat) {
+        var ret = [];
+        for (let index = 0; index < times; index++) {
+            ret = ret.concat(toRepeat);
+        }
+        return ret;
+    }
+
+    /**
+     * @const
+     * @type {Step[]} 
+    */
+    var plan =
+        [{ time: 5000, text: 'Get ready' }]
+            .concat(repeat(6, { time: 10000, text: '20cm Half Crimp' }, pause()))
+            .concat(repeat(6, { time: 10000, text: '20cm Finger Drag' }, pause()))
+            .concat(repeat(2, { time: 10000, text: '25cm Crimp (Middle + Ring)' }, pause()))
+            .concat(repeat(2, { time: 10000, text: '25cm Drag (Index + Middle)' }, pause()))
+            .concat(repeat(2, { time: 10000, text: '20cm Crimp (Middle + Ring)' }, pause()))
+            .concat(repeat(2, { time: 10000, text: '20cm Drag (Index + Middle)' }, pause()))
+            .concat([{ time: 999, text: 'done' }]);
+
+
+    function start() {
+        /** @type {number} milliseconds */
+        var start = Date.now();
+        /** @type {number} plan index */
+        var step = 0;
+
+        var remaining = plan[0].time;
+
+        setInterval(function () {
+            var delta = Date.now() - start; // milliseconds elapsed since start
+            remaining = plan[step].time - delta;
+
+            if (remaining <= 0) {
+                start = Date.now();
+                step++
+                remaining = plan[step].time
+            }
+
+            timer.textContent = Math.floor(remaining / 1000);
+            currentStep.textContent = plan[step].text;
+            nextStep.textContent = plan[step + 1].text;
+        }, 300);
+    }
+
+</script>
+
+</html>
