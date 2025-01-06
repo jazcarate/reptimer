@@ -22,7 +22,7 @@
     <h1 id="timer">00:00</h1>
     <h2 id="currentStep">Let's start!</h2>
     <h3 id="nextStep">--</h3>
-    <button onclick="javascript: start()" autofocus>Start</button>
+    <button onclick="javascript: start(); event.target.disabled = true;" autofocus>Start</button>
 </body>
 
 <script>
@@ -32,7 +32,6 @@
      * @property {string} text - to display.
      * @property {number} time - milliseconds.
      */
-
 
     /**
      * @returns {Step}
@@ -63,19 +62,29 @@
         }
     }
 
+    /*
+    * @template T
+    * @param {T} separator - The value to intersperse between elements of the array.
+    * @returns {Array<T>} - A new array with the separator interspersed between elements.
+    */
+    Array.prototype.intersperse = function (separator) {
+        return this.flatMap((el, i) => i == 0 ? [el] : [separator, el]);
+    }
+
     /**
      * @const
      * @type {Step[]} 
     */
     var plan =
-        [{ time: 5000, text: 'Get ready' }]
-            .concat(repeat(6, { time: 10000, text: '20cm Half Crimp' }, pause()))
-            .concat(repeat(6, { time: 10000, text: '20cm Finger Drag' }, pause()))
-            .concat(repeat(2, { time: 10000, text: '25cm Crimp (Middle + Ring)' }, pause()))
-            .concat(repeat(2, { time: 10000, text: '25cm Drag (Index + Middle)' }, pause()))
-            .concat(repeat(2, { time: 10000, text: '20cm Crimp (Middle + Ring)' }, pause()))
-            .concat(repeat(2, { time: 10000, text: '20cm Drag (Index + Middle)' }, pause()))
-            .concat([{ time: 999, text: 'done' }]);
+        [{ time: 5000, text: 'Get ready' }].concat(
+            repeat(6, { time: 10000, text: '20cm Half Crimp' })
+                .concat(repeat(6, { time: 10000, text: '20cm Finger Drag' }))
+                .concat(repeat(2, { time: 10000, text: '25cm Crimp (Middle + Ring)' }))
+                .concat(repeat(2, { time: 10000, text: '25cm Drag (Index + Middle)' }))
+                .concat(repeat(2, { time: 10000, text: '20cm Crimp (Middle + Ring)' }))
+                .concat(repeat(2, { time: 10000, text: '20cm Drag (Index + Middle)' }))
+                .intersperse(pause())
+        );
 
     console.log("plan", plan);
 
@@ -87,19 +96,26 @@
 
         var remaining = plan[0].time;
 
-        setInterval(function () {
+        var interval = setInterval(function () {
             var delta = Date.now() - start; // milliseconds elapsed since start
             remaining = plan[step].time - delta;
 
             if (remaining <= 0) {
                 start = Date.now();
+                if (step + 1 == plan.length) {
+                    timer.textContent = "Done!";
+                    currentStep.textContent = null;
+                    nextStep.textContent = null;
+                    clearInterval(interval);
+                    return;
+                }
                 step++
                 remaining = plan[step].time
             }
 
             timer.textContent = Math.floor(remaining / 1000);
             currentStep.textContent = plan[step].text;
-            nextStep.textContent = plan[step + 1].text;
+            nextStep.textContent = plan[step + 1]?.text;
         }, 300);
     }
 
